@@ -13,6 +13,21 @@ difficulty = 2
 # Must be above 0, or clicks would pass through to the game.
 background_opacity = 0.15
 
+# Wrong-answer GIFs. Drop your own .gif files into `gif_dir` (relative to this file).
+# The number on screen scales with wrong answers: the first `gif_grace` are free, then the
+# total grows ~`gif_growth`x per mistake (1.6 -> 1, 2, 3, 4, 7, 10, 17, 27...), capped at
+# `max_gifs`. Set max_gifs = 0 to disable. Gif_growth = 1 means just one more per mistake.
+gif_dir = "assets/gifs"
+gif_grace = 1
+gif_growth = 1.6
+max_gifs = 25
+
+# Each GIF gets a random size (longest side, px), a random rotation within
+# +/- gif_max_rotation degrees (180 = any orientation, 0 = upright), and 50% mirroring.
+gif_min_size = 120
+gif_max_size = 360
+gif_max_rotation = 180
+
 # Developer mode: enables an emergency escape (Ctrl+Shift+F12) and keeps a title bar on
 # the question panel. NEVER ship with this on, but ALWAYS develop with it on.
 debug = true

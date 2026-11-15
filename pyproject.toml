@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "A separate-window overlay that makes you solve math problems before you get back to your game."
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []  # stdlib only: tkinter + ctypes
+dependencies = ["Pillow>=10"]  # GIF decoding, resizing, rotation
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pyinstaller>=6"]

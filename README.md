@@ -27,10 +27,24 @@ src/mathlock/
   app.py        hidden Tk root + timer that triggers lock screens
   overlay.py    the lock-screen window (UI, unclosable behaviour, refocus loop)
   problems.py   math problem generation (pure logic, unit-tested)
+  gifs.py       wrong-answer GIF windows (Pillow: decode, random size/rotation)
+  stats.py      per-session stats log (wrong attempts etc.)
   config.py     config.toml loading/validation
   winutil.py    ctypes user32 helpers (topmost, foreground, DPI); no-ops off Windows
 tests/          pytest suite
 ```
+
+## Wrong answers: GIFs and stats
+
+Wrong answers make dancing GIFs pop up at random spots, each with a random size, rotation
+and mirroring. The count scales with mistakes: the first one is free, then the total grows
+~1.6x per mistake (1, 2, 3, 4, 7, 10, 17…, capped at `max_gifs`). Tune it all in `config.toml`. **Bring your own GIFs:** drop `.gif` files into `assets/gifs/`.
+They're git-ignored because most GIFs online are copyrighted, so share them with your team
+outside the repo.
+
+Wrong attempts appear on the lock screen (this session and all-time). Each lock session is
+appended to `%APPDATA%\MathLock\stats.jsonl` (`~/.local/share/mathlock/` on Linux) as one
+JSON line: start/end time, solved, wrong, and whether the debug escape was used.
 
 ## Anti-cheat compliance: the rules
 

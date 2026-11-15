@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import tkinter as tk
+from datetime import datetime
+from pathlib import Path
 from typing import Callable
 
-from . import problems, winutil
+from . import problems, stats, winutil
+from .gifs import GifSwarm
 from .config import Config
 
 REFOCUS_MS = 150  # how often we re-assert topmost + focus
@@ -19,6 +22,9 @@ class Overlay(tk.Toplevel):
         self.cfg = cfg
         self.on_unlock = on_unlock
         self.solved = 0
+        self.wrong = 0
+        self.lifetime_wrong = stats.total_wrong()
+        self.started = datetime.now()
         self.problem = problems.generate(cfg.difficulty)
         self._refocus_job: str | None = None
 
@@ -27,6 +33,14 @@ class Overlay(tk.Toplevel):
         # Tk's -alpha applies to a whole window, so one window can't do both.
         self.backdrop = self._make_backdrop(master)
         self._make_unclosable()
+        self.gifs = GifSwarm(
+            master, Path(cfg.gif_dir), winutil.virtual_screen_rect(self.backdrop),
+            max_windows=cfg.max_gifs, grace=cfg.gif_grace, growth=cfg.gif_growth,
+            min_size=cfg.gif_min_size, max_size=cfg.gif_max_size,
+            max_rotation=cfg.gif_max_rotation,
+            on_click=lambda: self.entry.focus_force(),
+            log=(lambda m: print(f"[mathlock] {m}")) if cfg.debug else (lambda m: None),
+        )
         self._build_ui()
         self._next_problem(first=True)
         self._hwnd = winutil.hwnd_for(self)
@@ -65,7 +79,7 @@ class Overlay(tk.Toplevel):
 
         if self.cfg.debug:
             # Dev mode: keeps the title bar and adds an escape hotkey.
-            self.bind_all("<Control-Shift-F12>", lambda e: self._unlock())
+            self.bind_all("<Control-Shift-F12>", lambda e: self._unlock(escaped=True))
         else:
             self.overrideredirect(True)  # no title bar / close button / taskbar entry
 
@@ -81,7 +95,8 @@ class Overlay(tk.Toplevel):
         We don't block those keys -- that would require a global hook."""
         self.backdrop.lift()
         self.backdrop.attributes("-topmost", True)
-        self.lift()  # panel above backdrop
+        self.gifs.lift_all()  # GIFs above backdrop...
+        self.lift()  # ...panel above everything
         self.attributes("-topmost", True)
         winutil.force_foreground(self._hwnd)
         self.entry.focus_force()
@@ -118,7 +133,9 @@ class Overlay(tk.Toplevel):
         if not first:
             self.problem = problems.generate(self.cfg.difficulty)
         self.question.config(text=f"{self.problem.prompt} = ?")
-        self.progress.config(text=f"Solved {self.solved} / {self.cfg.problems_required}")
+        self.progress.config(
+            text=f"Solved {self.solved} / {self.cfg.problems_required}    "
+                 f"Wrong: {self.wrong}    (all-time: {self.lifetime_wrong + self.wrong})")
         self.answer.set("")
 
     def _submit(self, _event=None) -> str:
@@ -129,13 +146,21 @@ class Overlay(tk.Toplevel):
                 return "break"
             self.feedback.config(text="Correct!", fg=GOOD)
         else:
+            self.wrong += 1
+            self.gifs.update_for(self.wrong)
             self.feedback.config(text=f"Nope — it was {self.problem.answer}. Try another.", fg=BAD)
         self._next_problem()
         return "break"
 
-    def _unlock(self) -> None:
+    def _unlock(self, escaped: bool = False) -> None:
         if self._refocus_job:
             self.after_cancel(self._refocus_job)
+        stats.record(stats.Session(
+            started=self.started.isoformat(timespec="seconds"),
+            ended=datetime.now().isoformat(timespec="seconds"),
+            solved=self.solved, wrong=self.wrong, escaped=escaped,
+        ))
+        self.gifs.destroy_all()
         self.unbind_all("<Alt-F4>")
         self.unbind_all("<Control-Shift-F12>")
         self.backdrop.destroy()
