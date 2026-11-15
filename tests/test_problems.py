@@ -39,3 +39,9 @@ def test_config_rejects_bad_difficulty(tmp_path):
     (tmp_path / "config.toml").write_text("difficulty = 9\n")
     with pytest.raises(ValueError):
         load_config(tmp_path)
+
+
+def test_config_rejects_zero_opacity(tmp_path):
+    (tmp_path / "config.toml").write_text("background_opacity = 0\n")
+    with pytest.raises(ValueError):
+        load_config(tmp_path)

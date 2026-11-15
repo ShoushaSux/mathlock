@@ -36,7 +36,8 @@ tests/          pytest suite
 The point is that anti-cheat software (EAC, BattlEye, Vanguard, etc.) has nothing to flag.
 MathLock is just an ordinary desktop app that sometimes shows a topmost window.
 
-**We DO:** create our own window, make it topmost/fullscreen, take focus back when it's lost,
+**We DO:** create our own windows (a translucent full-screen backdrop, `background_opacity`,
+plus an opaque question panel), make them topmost, take focus back when it's lost,
 and ignore close requests (X button, Alt+F4, WM_CLOSE).
 
 **We NEVER:** use `SetWindowsHookEx` (global keyboard/mouse hooks), `SendInput`/`keybd_event`
