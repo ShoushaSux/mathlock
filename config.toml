@@ -1,7 +1,7 @@
 # MathLock configuration. Copy to config.local.toml for personal overrides (git-ignored).
 
 # Minutes of play allowed between lock screens.
-interval_minutes = 30
+interval_minutes = 0.5 
 
 # How many problems must be answered correctly to unlock.
 problems_required = 3
@@ -9,6 +9,11 @@ problems_required = 3
 # 1 = single-digit add/sub, 2 = two-digit + multiplication, 3 = adds division and bigger numbers.
 difficulty = 2
 
-# Developer mode: enables an emergency escape (Ctrl+Shift+F12) and makes the overlay
-# non-fullscreen. NEVER ship with this on, but ALWAYS develop with it on.
+# Opacity of the full-screen backdrop (0-1). Low = game stays visible behind the lock.
+# Must be above 0, or clicks would pass through to the game.
+background_opacity = 0.15
+
+# Developer mode: enables an emergency escape (Ctrl+Shift+F12) and keeps a title bar on
+# the question panel. NEVER ship with this on, but ALWAYS develop with it on.
 debug = true
+
