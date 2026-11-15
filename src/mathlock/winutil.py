@@ -33,11 +33,23 @@ if IS_WINDOWS:
     user32.BringWindowToTop.argtypes = [wintypes.HWND]
     user32.GetParent.argtypes = [wintypes.HWND]
     user32.GetParent.restype = wintypes.HWND
+    user32.GetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int]
+    user32.GetWindowLongW.restype = ctypes.c_long
+    user32.SetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_long]
+    user32.SetWindowLongW.restype = ctypes.c_long
+    user32.SetLayeredWindowAttributes.argtypes = [
+        wintypes.HWND, wintypes.COLORREF, wintypes.BYTE, wintypes.DWORD,
+    ]
+    user32.GetLayeredWindowAttributes.argtypes = [
+        wintypes.HWND, ctypes.POINTER(wintypes.COLORREF),
+        ctypes.POINTER(wintypes.BYTE), ctypes.POINTER(wintypes.DWORD),
+    ]
 
     HWND_TOPMOST = wintypes.HWND(-1)
     SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW = 0x0002, 0x0001, 0x0040
     SM_XVIRTUALSCREEN, SM_YVIRTUALSCREEN = 76, 77
     SM_CXVIRTUALSCREEN, SM_CYVIRTUALSCREEN = 78, 79
+    GWL_EXSTYLE, WS_EX_LAYERED, LWA_ALPHA = -20, 0x00080000, 0x2
 
 
 def enable_dpi_awareness() -> None:
@@ -71,6 +83,30 @@ def virtual_screen_rect(tk_window) -> tuple[int, int, int, int]:
             user32.GetSystemMetrics(SM_CYVIRTUALSCREEN),
         )
     return 0, 0, tk_window.winfo_screenwidth(), tk_window.winfo_screenheight()
+
+
+def set_window_opacity(hwnd: int | None, opacity: float) -> bool:
+    """Make one of OUR windows translucent (0-1) via a layered window.
+
+    Tk's own -alpha is unreliable on borderless (overrideredirect) windows set up
+    before they're mapped, so we apply it directly once the window exists.
+    """
+    if not IS_WINDOWS or not hwnd:
+        return False
+    style = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+    user32.SetWindowLongW(hwnd, GWL_EXSTYLE, style | WS_EX_LAYERED)
+    alpha = max(1, min(255, round(opacity * 255)))
+    return bool(user32.SetLayeredWindowAttributes(hwnd, 0, alpha, LWA_ALPHA))
+
+
+def get_window_opacity(hwnd: int | None) -> float | None:
+    """Opacity Windows actually reports for a window (None if not layered / not Windows)."""
+    if not IS_WINDOWS or not hwnd:
+        return None
+    alpha, flags = wintypes.BYTE(), wintypes.DWORD()
+    if not user32.GetLayeredWindowAttributes(hwnd, None, ctypes.byref(alpha), ctypes.byref(flags)):
+        return None
+    return (alpha.value & 0xFF) / 255 if flags.value & LWA_ALPHA else 1.0
 
 
 def force_foreground(hwnd: int | None) -> None:

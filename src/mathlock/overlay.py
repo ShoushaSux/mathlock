@@ -41,8 +41,19 @@ class Overlay(tk.Toplevel):
         backdrop.geometry(f"{w}x{h}+{x}+{y}")
         backdrop.attributes("-topmost", True)
         # Must stay > 0: a fully transparent window would let clicks reach the game.
-        backdrop.attributes("-alpha", max(0.01, self.cfg.background_opacity))
+        opacity = max(0.01, self.cfg.background_opacity)
+        backdrop.attributes("-alpha", opacity)
         backdrop.bind("<Button>", lambda e: self.entry.focus_force())
+
+        # Re-apply once the window really exists on screen (see winutil.set_window_opacity).
+        backdrop.update()
+        hwnd = winutil.hwnd_for(backdrop)
+        winutil.set_window_opacity(hwnd, opacity)
+        backdrop.attributes("-alpha", opacity)
+        if self.cfg.debug:
+            actual = winutil.get_window_opacity(hwnd)
+            print(f"[mathlock] backdrop opacity: requested {opacity}, "
+                  f"tk reports {backdrop.attributes('-alpha')}, windows reports {actual}")
         return backdrop
 
     def _make_unclosable(self) -> None:
