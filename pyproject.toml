@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mathlock"
+version = "0.1.0"
+description = "A separate-window overlay that makes you solve math problems before you get back to your game."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []  # stdlib only: tkinter + ctypes
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pyinstaller>=6"]
+
+[project.scripts]
+mathlock = "mathlock.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
