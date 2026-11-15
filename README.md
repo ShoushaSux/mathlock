@@ -5,10 +5,11 @@ and won't go away until you solve some math problems.
 
 ## Quick start (Windows, Python 3.11+)
 
+Double-click **`setup.bat`** (or run it from a terminal). It checks Python/tkinter, creates
+`.venv`, and installs everything. On Linux/macOS run `./setup.sh` instead. Then:
+
 ```powershell
-py -m venv .venv
 .venv\Scripts\activate
-pip install -e ".[dev]"
 python -m mathlock --now      # show the lock screen immediately
 python -m mathlock            # normal mode: lock every `interval_minutes`
 pytest                        # run tests
